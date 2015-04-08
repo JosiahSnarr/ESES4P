@@ -20,7 +20,17 @@ accInit initializes the ports used as GPIOs for the accelerometer
 *************************************************************************/
 void accInit(void)
 {
+  //Set up input for channel select
   SET_BITS(ACC_FUNC_DDR, ACC_FUNC_BOTH_MASK);
+  
+  //Set up ATDCTL2 for power up + fast clear
+  ATDCTL2 = ATDCTL2_SETUP;
+  
+  //Set up ATDCTL3 for 1 conversion, FIFO off, and finish-then-freeze
+  ATDCTL3 = ATDCTL3_SETUP;
+  
+  //Set up ATDCTL4 for 10-bit data, 2 sample clocks, prescaler of 8(16MHz/8=2MHz)
+  ATDCTL4 = ATDCTL4_SETUP;
 }
 
 /*************************************************************************
@@ -35,10 +45,16 @@ unsigned int getAccValue(unsigned char channel)
   unsigned int value = 0;
   
   setAccChnl(channel);
+
+  //Set up ATDCTL5 for right justified and channel 0
+  ATDCTL5 = ATDCTL5_SETUP;
   
-  //Enable AD0
-  //SET_BIT(ATDCTL2, AN0);
+  //Wait for conversion to be complete
+  while((ATDSTAT0 && ATDSTAT0_SCF_MASK) != 0);
   
+  //Clear flag, read result (fast clear, reading clears SCF flag)
+  value = ((ATDDR0H) << 8) & ATDDR0L;
+
   return(value);
 }
 
