@@ -50,10 +50,10 @@ unsigned int getAccValue(unsigned char channel)
   ATDCTL5 = ATDCTL5_SETUP;
   
   //Wait for conversion to be complete
-  while((ATDSTAT0 && ATDSTAT0_SCF_MASK) != 0);
+  while(((ATDSTAT0 & ATDSTAT0_SCF_MASK) && ATDSTAT0_SCF_MASK) != 0);
   
   //Clear flag, read result (fast clear, reading clears SCF flag)
-  value = ((ATDDR0H) << 8) & ATDDR0L;
+  value = ATDDR0;
 
   return(value);
 }

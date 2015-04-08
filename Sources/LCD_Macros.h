@@ -79,7 +79,7 @@ LCD_Macros.h contains the macros, constants and prototypes to support the
 void LCDdata(unsigned char thisByte);
 void LCDcmd(unsigned char command);
 void LCDclear(void);
-void LCDinit();
+void LCDinit(void);
 void putcSCI(char cx);
 void putsSCI(char *ptr);
 void LCDputc(char c);

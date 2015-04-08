@@ -17,7 +17,7 @@ servo.h contains macros, constants, and prototypes for the accelerometer
 #define ACC_FUNC_PORT_S1    PTP_PTP2
 #define ACC_FUNC_BOTH_MASK  (PTP_PTP3_MASK|PTP_PTP2_MASK)
 
-#define ATDCTL2_SETUP       0b01100000
+#define ATDCTL2_SETUP       0b11100000
 #define ATDCTL3_SETUP       0b00001010
 #define ATDCTL4_SETUP       0b00000011
 #define ATDCTL5_SETUP       0b10000000
@@ -26,9 +26,6 @@ servo.h contains macros, constants, and prototypes for the accelerometer
 #define ACC_SEL_X           CLR_BITS(ACC_FUNC_PORT, ACC_FUNC_BOTH_MASK);
 #define ACC_SEL_Y           SET_BITS(ACC_FUNC_PORT, ACC_FUNC_PORT_S0);
 #define ACC_SEL_Z           SET_BITS(ACC_FUNC_PORT, ACC_FUNC_PORT_S1);
-
-#define CLR_ATDSTAT0_FLAG(x) (ATDSTAT0 = (1<<(x)))
-#define CLR_ATDSTAT1_FLAG(x) (ATDSTAT1 = (1<<(x)))
 
 //Prototypes
 void accInit(void);
