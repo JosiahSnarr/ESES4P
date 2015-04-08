@@ -11,6 +11,21 @@ servo.h contains macros, constants, and prototypes for the accelerometer
 #include "macros.h"
 
 //Definitions
-#define ATD_PORT		  PORTAD
-#define ATD_PORT_DDR	DDRAD
-#define ATD_DDR_INIT  0b00000001
+#define ACC_FUNC_PORT       PTP
+#define ACC_FUNC_DDR        DDRP
+#define ACC_FUNC_PORT_S0    PTP_PTP3
+#define ACC_FUNC_PORT_S1    PTP_PTP2
+#define ACC_FUNC_BOTH_MASK  (PTP_PTP3_MASK|PTP_PTP2_MASK)
+
+//Macros
+#define ACC_SEL_X           CLR_BITS(ACC_FUNC_PORT, ACC_FUNC_BOTH_MASK);
+#define ACC_SEL_Y           SET_BITS(ACC_FUNC_PORT, ACC_FUNC_PORT_S0);
+#define ACC_SEL_Z           SET_BITS(ACC_FUNC_PORT, ACC_FUNC_PORT_S1);
+
+#define CLR_ATDSTAT0_FLAG(x) (ATDSTAT0 = (1<<(x)))
+#define CLR_ATDSTAT1_FLAG(x) (ATDSTAT1 = (1<<(x)))
+
+//Prototypes
+void accInit(void);
+unsigned int getAccValue(unsigned char channel);
+void setAccChnl(unsigned char channel);

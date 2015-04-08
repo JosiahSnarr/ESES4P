@@ -9,9 +9,6 @@ servo.h contains macros, constants, and prototypes for the servo control
   of the HCS12 embedded controller project.
 *************************************************************************/
 
-#ifndef SERVO_H
-#define SERVO_H
-
 #include <hidef.h>
 #include "derivative.h"
 
@@ -26,5 +23,3 @@ void servo_init(void);
 void servo_angle(unsigned int angle);
 
 interrupt VectorNumber_Vtimch2 void servo_pulse(void);
-
-#endif
