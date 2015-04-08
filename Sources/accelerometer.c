@@ -55,7 +55,7 @@ unsigned int getAccValue(unsigned char channel)
   //Clear flag, read result (fast clear, reading clears SCF flag)
   value = ATDDR0;
 
-  return(value);
+  return(value);  //Accdeleration value
 }
 
 /*************************************************************************
