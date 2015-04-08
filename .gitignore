@@ -1,0 +1,11 @@
+prm/*
+cmd/*
+bin/*
+ESES4P_Data/*
+*.ini
+*.mcp
+*.mem
+*.hwl
+Sources/Start12.c
+Sources/datapage.c
+Sources/main.c
