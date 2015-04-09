@@ -42,13 +42,13 @@ macros.h contains macros to support the HCS12 embedded system project
 #define LO_NYBBLE(value)	((value)&0x0F)
 #define HI_NYBBLE(value)	(((value)>>4)&0x0F)
 
+//From Natesh
 #define BIT_CAT(x, y, bits) (((x)<<(bits))+(y))
 
 #define NYB_CAT(x, y) (BIT_CAT((x),(y),4))
 #define BYTE_CAT(x,y) (BIT_CAT((x),(y),8))
 #define WORD_CAT(x,y) (BIT_CAT((x),(y),16))
 
-//From Natesh
 #define EXPAND_PORT(port) (*(volatile word * const) &port);
 
 #define EVAL(x,y) x##y
