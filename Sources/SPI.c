@@ -8,6 +8,7 @@ Date: April 9, 2015
 SPI.c contains the functions to control the SPI interface and DAC
 *************************************************************************/
 #include "derivative.h"
+#include "timer.h"
 #include "SPI.h"
 
 
@@ -58,7 +59,7 @@ Date: April 9, 2015
 DACSend forms a header for data sent to the DAC, and sends the data with
   the specified instruction (0 - LDAB, 1 - LDA, 2 - LDB)
 *************************************************************************/
-void DACSend(char dVal, char inst)
+void DACSend(unsigned char dVal, unsigned char inst)
 {
   char lss;     //Least significant set to send
   char mss;     //Most significant set to send
@@ -81,8 +82,10 @@ void DACSend(char dVal, char inst)
   lss = (NYB_CAT(dVal, LSB_FRAME)); //Form LSB side of header
   
   //Push output to DAC
-  putcSPI(mss);
-  putcSPI(lss);
+  CLR_BITS(SPI_PORT, SPI_SS);
+  putSPI(mss);
+  putSPI(lss);
+  SET_BITS(SPI_PORT, SPI_SS);
 }
 
 /*************************************************************************
@@ -90,9 +93,23 @@ Author: Josiah Snarr
 
 Date: April 9, 2015
 
-putcSPI pushes a byte-long value through the SPI interface
+putcSPI pushes a byte-long value through the SPI interface with SS low
 *************************************************************************/
-void putcSPI(char val)
+void putcSPI(unsigned char val)
+{
+  CLR_BITS(SPI_PORT, SPI_SS);
+  putSPI(val);
+  SET_BITS(SPI_PORT, SPI_SS);
+}
+
+/*************************************************************************
+Author: Josiah Snarr
+
+Date: April 9, 2015
+
+putSPI pushes a byte-long value through the SPI interface
+*************************************************************************/
+void putSPI(unsigned char val)
 {
   char tempVal; //Variable to throw return to
   
@@ -112,6 +129,11 @@ spiInit initializes the SPI for 1MHz baud and no slave select
 *************************************************************************/
 void spiInit(void)
 {
+  //SET_BITS(SPI_DDR, SPI_SS);  //Set SS as manual output (GPIO)
+  //SET_BITS(SPI_PORT, SPI_SS); //Initialize high
   SPICR1 = SPICR1_SETUP;
+  //SPICR2 = SPICR2_SETUP;
   SPIBR = SPIBR_SETUP;
+  SET_BITS(SPI_DDR, SPI_SS);  //Set SS as manual output (GPIO)
+  SET_BITS(SPI_PORT, SPI_SS); //Initialize high
 }

@@ -11,8 +11,13 @@ SPI.h contains macros, constants, and prototypes for the SPI functions
 #include "macros.h"
 
 //Definitions
+#define SPI_PORT      PTM
+#define SPI_DDR       DDRM
+#define SPI_SS        PTM_PTM3_MASK
+
 #define SPICR1_SETUP  0b01010000  //SPI enable, master mode, active high, first edge halfway, MSB first
-#define SPIBR_SETUP   0b00000011  //Baud rate of 1Mhz divided from 16Mhz  
+//#define SPICR2_SETUP  0b00010000  //SPI setup for SS
+#define SPIBR_SETUP   0b00000000  //Baud rate of 8Mhz divided from 16Mhz  
 
 #define LSB_FRAME     0           //Frame for LSB set of data to DAC
 #define DAC_COM_LDA   0b00010000  //Load input register A on DAC, others unchanged
@@ -30,6 +35,7 @@ SPI.h contains macros, constants, and prototypes for the SPI functions
 void DACWake(void);
 void DACShutdown(void);
 void DACStandby(void);
-void DACSend(char dVal, char inst);
-void putcSPI(char val);
+void DACSend(unsigned char dVal, unsigned char inst);
+void putcSPI(unsigned char val);
+void putSPI(unsigned char val);
 void spiInit(void);
