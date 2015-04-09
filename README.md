@@ -8,12 +8,15 @@ Modules
 
 * LCD (lcd)
 * Servo (servo)
+* Accelerometer (accelerometer)
+* DAC (within spi)
 
 Utilities
 ---------
 
 * Basic Bit Operation Macros (macros)
 * Timer Channels (timer)
+* SPI (spi)
 
 Notes:
 ------
