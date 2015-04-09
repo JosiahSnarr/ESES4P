@@ -21,8 +21,10 @@ DACWake wakes the DAC
 *************************************************************************/
 void DACWake(void)
 {
-  putcSPI(DAC_COM_WAKE);
-  putcSPI(LSB_FRAME);
+  CLR_BITS(SPI_PORT, SPI_SS);
+  putSPI(DAC_COM_WAKE);
+  putSPI(LSB_FRAME);
+  SET_BITS(SPI_PORT, SPI_SS);
 }
 
 /*************************************************************************
@@ -34,8 +36,10 @@ DACShutdown shuts down the DAC
 *************************************************************************/
 void DACShutdown(void)
 {
-  putcSPI(DAC_COM_SHUT);
-  putcSPI(LSB_FRAME);
+  CLR_BITS(SPI_PORT, SPI_SS);
+  putSPI(DAC_COM_SHUT);
+  putSPI(LSB_FRAME);
+  SET_BITS(SPI_PORT, SPI_SS);
 }
 
 /*************************************************************************
@@ -47,8 +51,10 @@ DACStandby puts the DAC on standby
 *************************************************************************/
 void DACStandby(void)
 {
-  putcSPI(DAC_COM_STAN);
-  putcSPI(LSB_FRAME);
+  CLR_BITS(SPI_PORT, SPI_SS);
+  putSPI(DAC_COM_STAN);
+  putSPI(LSB_FRAME);
+  SET_BITS(SPI_PORT, SPI_SS);
 }
 
 /*************************************************************************
@@ -129,10 +135,7 @@ spiInit initializes the SPI for 1MHz baud and no slave select
 *************************************************************************/
 void spiInit(void)
 {
-  //SET_BITS(SPI_DDR, SPI_SS);  //Set SS as manual output (GPIO)
-  //SET_BITS(SPI_PORT, SPI_SS); //Initialize high
   SPICR1 = SPICR1_SETUP;
-  //SPICR2 = SPICR2_SETUP;
   SPIBR = SPIBR_SETUP;
   SET_BITS(SPI_DDR, SPI_SS);  //Set SS as manual output (GPIO)
   SET_BITS(SPI_PORT, SPI_SS); //Initialize high
