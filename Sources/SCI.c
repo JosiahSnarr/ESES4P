@@ -96,4 +96,5 @@ interrupt VectorNumber_Vsci void sciReceive(void)
   {
     outBuff = (char)((outBuff+1) % BOUND_BUFF_SIZE);
   }
+  CLR_BITS(SCISR1, SCISR1_RDRF_MASK);
 }
