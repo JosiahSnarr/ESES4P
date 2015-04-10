@@ -210,21 +210,7 @@ void LCDinit(void)
   LCDcgramInit(motor, 8, MOTOR);
   LCDcgramInit(deathFace, 8, DEATH);
 }
-/*
-void putcSCI(unsigned char cx)
-{
-  while(!(SCISR1 & SCISR1_TDRE_MASK));
-  SCIDRL = cx;
-}
 
-void putsSCI(unsigned char *ptr)
-{
-  while(*ptr) //While still characters to output
-  {
-    putcSCI(*ptr++);
-  }
-}
-*/
 void LCDputc(char c)
 {
   LCDdata(c);
