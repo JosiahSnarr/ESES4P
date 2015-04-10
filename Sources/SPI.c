@@ -5,7 +5,7 @@ Author: Josiah Snarr
 
 Date: April 9, 2015
 
-SPI.c contains the functions to control the SPI interface and DAC
+SPI.c contains the functions to control the SPI and DAC
 *************************************************************************/
 #include "derivative.h"
 #include "timer.h"
@@ -14,7 +14,6 @@ SPI.c contains the functions to control the SPI interface and DAC
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
 DACWake wakes the DAC
@@ -29,7 +28,6 @@ void DACWake(void)
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
 DACShutdown shuts down the DAC
@@ -44,7 +42,6 @@ void DACShutdown(void)
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
 DACStandby puts the DAC on standby
@@ -59,7 +56,6 @@ void DACStandby(void)
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
 DACSend forms a header for data sent to the DAC, and sends the data with
@@ -96,7 +92,6 @@ void DACSend(unsigned char dVal, unsigned char inst)
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
 putcSPI pushes a byte-long value through the SPI interface with SS low
@@ -110,10 +105,9 @@ void putcSPI(unsigned char val)
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
-putSPI pushes a byte-long value through the SPI interface
+putSPI pushes a byte-long value through the SPI
 *************************************************************************/
 void putSPI(unsigned char val)
 {
@@ -128,7 +122,6 @@ void putSPI(unsigned char val)
 
 /*************************************************************************
 Author: Josiah Snarr
-
 Date: April 9, 2015
 
 spiInit initializes the SPI for 1MHz baud and no slave select
