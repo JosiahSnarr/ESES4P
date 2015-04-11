@@ -66,7 +66,7 @@ void DACSend(unsigned char dVal, unsigned char inst)
   char lss;     //Least significant set to send
   char mss;     //Most significant set to send
   
-  switch(inst)    //Find command and form MSB side of header
+  switch(inst)  //Find command and form MSB side of header
   {
     case COM_LDA:
       mss = (DAC_COM_LDA | (HI_NYBBLE(dVal)));

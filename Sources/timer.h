@@ -11,8 +11,7 @@ timer.h contains macros, constants, and prototypes for the timer.c
 #include "macros.h"
 #include "derivative.h"
 
-/* Timer Modules Prescalers */
-
+//Prescalers
 #define TIMER_PRESCALER_1    0x00
 #define TIMER_PRESCALER_2    0x01
 #define TIMER_PRESCALER_4    0x02
@@ -24,12 +23,10 @@ timer.h contains macros, constants, and prototypes for the timer.c
 
 #define TIMER_PRESCALER_MASK 0x07
 
-#define TIMER_SET_PRESCALER(prescale) \
-  CLR_BITS(TSCR2, TIMER_PRESCALER_MASK); \
+#define TIMER_SET_PRESCALER(prescale) CLR_BITS(TSCR2, TIMER_PRESCALER_MASK); \
   SET_BITS(TSCR2, prescale)
 
-/* Timer System Control */
-
+//Timer system control
 #define TIMER_ENABLE()              SET_BITS(TSCR1, TSCR1_TEN_MASK)
 #define TIMER_DISABLE()             CLR_BITS(TSCR1, TSCR1_TEN_MASK)
 
@@ -39,8 +36,7 @@ timer.h contains macros, constants, and prototypes for the timer.c
 #define TIMER_NORMAL_FAST_CLEAR()   CLR_BITS(TSCR1, TSCR1_TFFCA_MASK)
 #define TIMER_FANCY_FAST_CLEAR()    SET_BITS(TSCR1, TSCR1_TFFCA_MASK)
 
-/* Input Capture / Output Compare */
-
+//Input/output capture
 #define MAKE_CHNL_OC(x) (TIOS |= (x))
 #define MAKE_CHNL_IC(x) (TIOS &= (~(x)))
 
@@ -48,12 +44,10 @@ timer.h contains macros, constants, and prototypes for the timer.c
 
 #define CLR_TIMER_CHNL_FLAG(x) (TFLG1 =(1<<(x)))
 
-/* Timer Flag Register */
-
+//Timer flag
 #define TIMER_CHNL_EVENT(chnl)      IS_BIT_SET(TFLG1, chnl)
 
-/* Output Compare Actions */
-
+//Output compare actions
 #define TIMER_OC_ACTION_NO_ACTIONS 0x00
 #define TIMER_OC_ACTION_TOGGLE_PIN 0x01
 #define TIMER_OC_ACTION_DRIVE_LOW  0x02
@@ -72,14 +66,8 @@ timer.h contains macros, constants, and prototypes for the timer.c
 
 #define TCHNL(chnl) EVAL(TC, chnl)
 
-/* Named Timer Channels */
-
-#define TIMER_CHNL_DELAY 0
-
-/* Prototypes */
-
+//Prototypes
 void timer_init(void);
-
 void msDelay(int waitTime);
 
 

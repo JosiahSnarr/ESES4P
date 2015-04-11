@@ -80,8 +80,6 @@ void LCDdata(unsigned char thisByte);
 void LCDcmd(unsigned char command);
 void LCDclear(void);
 void LCDinit(void);
-void putcSCI(char cx);
-void putsSCI(char *ptr);
 void LCDputc(char c);
 void LCDputs(char *ptr);
 void LCDprintf(char * format, ...);
