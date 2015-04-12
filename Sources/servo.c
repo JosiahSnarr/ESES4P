@@ -44,7 +44,12 @@ void servo_angle(unsigned int angle)
   if(angle <= 180){
     DisableInterrupts;  //Critical section (use of pulseWidth)
     
-    pulseWidth = (angle+OFFSET)*OC_DELTA_10US;
+#if OC_DELTA_10US == 1
+    pulseWidth = (angle+OFFSET);//*OC_DELTA_10US; if OC_DELTA_10US not 1
+#else
+#error "Wrong prescaler"
+#endif
+
     pulseWidth += pulseWidth>>2;   //Make up for the .25 error
     
     offTime = TIMER_OFF_TIME - pulseWidth;

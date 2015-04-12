@@ -13,7 +13,7 @@ LCD.c contains the functions to control the LCD module
 #include <stdio.h>
 
 //Natesh's charachters
-char upArrow[8] = 
+static char upArrow[8] = 
 {
 	0b00000100,
 	0b00001110,
@@ -25,7 +25,7 @@ char upArrow[8] =
 	0b00000000
 };
 
-char heart[8] = 
+static char heart[8] = 
 {
 	0b00000000,
 	0b00001010,
@@ -37,7 +37,7 @@ char heart[8] =
 	0b00000000
 };
 
-char smile[8] = 
+static char smile[8] = 
 {
 	0b00000000,
 	0b00000000,
@@ -49,7 +49,7 @@ char smile[8] =
 	0b00000000
 };
 
-char person[8] = 
+static char person[8] = 
 {
 	0b00000100,
 	0b00001010,
@@ -62,7 +62,7 @@ char person[8] =
 };
 
 //My characters
-char motor[8] =
+static char motor[8] =
 {
 	0b00011111,
 	0b00011111,
@@ -74,7 +74,7 @@ char motor[8] =
 	0b00011111
 };
 
-char deathFace[8] =
+static char deathFace[8] =
 {
 	0b00010101,
 	0b00001010,
@@ -86,7 +86,7 @@ char deathFace[8] =
 	0b00010001
 };
 
-char robot[8] =
+static char robot[8] =
 {
 	0b00001110,
 	0b00011111,
@@ -98,7 +98,7 @@ char robot[8] =
 	0b00011011
 };
 
-char snowman[8] =
+static char snowman[8] =
 {
 	0b00001110,
 	0b00010101,
