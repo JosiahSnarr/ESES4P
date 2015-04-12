@@ -36,5 +36,5 @@ void msDelay(int waitTime)
     TC3 += 125;                   //Add on 125ms delay
   }
   
-  MAKE_CHNL_IC(TIOS_IOS3_MASK); //No more OC for TC3
+  MAKE_CHNL_IC((unsigned char)TIOS_IOS3_MASK); //No more OC for TC3
 }
