@@ -21,9 +21,9 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 
 #define MOTORS_MASK     0x30    //0b00110000
 
-#define CLOCK_SCALE     0x00    //No prescaler on A
+#define CLOCK_SCALE     0x06    //Prescaler of 64 (125kHz)
 
-#define PWM_PER         0x01    //500us period
+#define PWM_PER         0x3F    //1.024ms period
 
 #define MAX_DUTY        0x00    //Max on duty corresponds to no off duty cycle  (motors max speed)
 #define MIN_DUTY        0xFF    //Min on duty corresponds to max off duty cycle (motors off)
@@ -42,6 +42,10 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 #define DISABLE_B             DISABLE_MOTOR((BV(5)))
 #define DISABLE_BOTH          DISABLE_MOTOR(MOTORS_MASK)
 
+#define DUTY_A(duty)          PWMDTY4 = (duty)
+#define DUTY_B(duty)          PWMDTY5 = (duty)
+#define DUTY_BOTH(duty)       DUTY_A(duty);DUTY_B(duty)
+
 #define FORWARD_A             SET_BITS(DC_PORT, MOTOR_A_1);CLR_BITS(DC_PORT, MOTOR_A_2)
 #define REVERSE_A             SET_BITS(DC_PORT, MOTOR_A_2);CLR_BITS(DC_PORT, MOTOR_A_1)
 #define FORWARD_B             SET_BITS(DC_PORT, MOTOR_B_1);CLR_BITS(DC_PORT, MOTOR_B_2)
@@ -51,3 +55,6 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 
 //Prototypes
 void DCinit(void);
+void DCstart(void);
+void DCstop(void);
+void DCdirec(char mot, char direc);

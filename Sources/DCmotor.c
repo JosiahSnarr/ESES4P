@@ -9,7 +9,6 @@ DCmotor.c contains the functions to control the DC motor
 *************************************************************************/
 #include "derivative.h"
 #include "DCmotor.h"
-#include "timer.h"
 
 /*************************************************************************
 Author: Josiah Snarr
@@ -26,8 +25,8 @@ void DCinit(void)
   CLR_BITS(PWMCAE, MOTORS_MASK);      //Left align the pulses
   PWMPER4 = PWM_PER;                  //Motor A period
   PWMPER5 = PWM_PER;                  //Motor B period
-  PWMDTY4 = MIN_DUTY;                 //Motor A is off
-  PWMDTY5 = MIN_DUTY;                 //Motor B is off
+  DUTY_A(MIN_DUTY);                   //Motor A is off
+  DUTY_B(MIN_DUTY);                   //Motor B is off
   DISABLE_BOTH;                       //Ensure motors are disabled
   
   //Set up port B for motor direction selection
@@ -45,6 +44,7 @@ DCstart starts the DC motors
 void DCstart(void)
 {
   ENABLE_BOTH;
+  DUTY_BOTH(0x10);
 }
 
 /*************************************************************************
@@ -62,9 +62,9 @@ void DCstop(void)
 Author: Josiah Snarr
 Date: April 14, 2015
 
-DCdirec sets the direction of the specified motor
+DCdirec sets the direction of the specified motors
 *************************************************************************/
-void DCdirec(unsigned char mot, unsigned char direc)
+void DCdirec(char mot, char direc)
 {
   switch(direc)   //Find direction and go to coresponding selection
   {
