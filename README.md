@@ -7,9 +7,12 @@ Modules
 -------
 
 * LCD (lcd)
-* Servo (servo)
+* Servo Motor (servo)
 * Accelerometer (accelerometer)
 * DAC (within spi)
+* Serial Communication (SCI)
+* Stepper Motor (stepper)
+* DC Motors (DCmotor)
 
 Utilities
 ---------
