@@ -11,6 +11,12 @@ SPI.c contains the functions to control the SPI and DAC
 #include "timer.h"
 #include "SPI.h"
 
+void DACUpdate(void){
+  CLR_BITS(SPI_PORT, SPI_SS);
+  putSPI(DAC_COM_UPDA);
+  putSPI(LSB_FRAME);
+  SET_BITS(SPI_PORT, SPI_SS);
+}
 
 /*************************************************************************
 Author: Josiah Snarr
