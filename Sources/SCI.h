@@ -21,7 +21,7 @@ SCI.h contains macros, constants, and prototypes for the serial interface
 #define NO_CHAR       127         //No charachter value
 
 //Prototypes
-void sciInit(void);
-char sciDequeue(void);
-void putcSCI(unsigned char cx);
-void putsSCI(unsigned char *ptr);
+extern void sciInit(void);
+extern char sciDequeue(void);
+extern void putcSCI(unsigned char cx);
+extern void putsSCI(unsigned char *ptr);

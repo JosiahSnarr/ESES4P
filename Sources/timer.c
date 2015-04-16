@@ -20,6 +20,7 @@ void timer_init(void)
 	TIMER_FANCY_FAST_CLEAR();
 	
 	TIMER_ENABLE();
+	CLR_BITS(TIE, (TIE_C3I_MASK));
 }
 
 void msDelay(int waitTime)

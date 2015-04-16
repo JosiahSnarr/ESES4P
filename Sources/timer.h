@@ -67,8 +67,8 @@ timer.h contains macros, constants, and prototypes for the timer.c
 #define TCHNL(chnl) EVAL(TC, chnl)
 
 //Prototypes
-void timer_init(void);
-void msDelay(int waitTime);
+extern void timer_init(void);
+extern void msDelay(int waitTime);
 
 
 

@@ -54,7 +54,7 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 #define REVERSE_BOTH          SET_BITS(DC_PORT, MOTOR_A_2|MOTOR_B_2);CLR_BITS(DC_PORT, MOTOR_A_1|MOTOR_B_1)
 
 //Prototypes
-void DCinit(void);
-void DCstart(void);
-void DCstop(void);
-void DCdirec(char mot, char direc);
+extern void DCinit(void);
+extern void DCstart(void);
+extern void DCstop(void);
+extern void DCdirec(char mot, char direc);

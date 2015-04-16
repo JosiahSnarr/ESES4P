@@ -68,7 +68,7 @@ void encoderStart(void)
   SET_IC_ACTION(0, TIMER_IC_ACTION_RISING_EDGE);
   SET_IC_ACTION(1, TIMER_IC_ACTION_RISING_EDGE);
   
-  SET_BITS(TIE, (TIE_C1I_MASK|TIE_C0I_MASK));     //Enable interrupts for both encoders
+  SET_BITS(TIE, TIE_C0I_MASK);//(TIE_C1I_MASK|TIE_C0I_MASK));     //Enable interrupts for both encoders
   SET_BITS(TSCR2, TOI_MASK);                      //Enable overflow interrupt
 }
 
@@ -88,15 +88,95 @@ void encoderStop(void)
   BFlag = 0;
 }
 
-long gemmeValBYo(void)
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 16, 2015
+
+calculateA does calculations on encoder A's values so that they need not
+  be done in the interrupt
+*************************************************************************/
+void calculateA(void)
 {
-  return encoderBSecond[currASec-1];
+  if((AFlag & CALC_FLAG) == CALC_FLAG)
+  {  
+    if((encoderAFirstCapt < encoderALastCapt) && encoderAO != 0)  //If extra overflow count, remove it
+    {
+      encoderAO--;
+    }
+  
+    //Calculate total time passed
+    encoderASecond[currASec] = (encoderAO*MAX_INT)+(encoderALastCapt - encoderAFirstCapt);
+  
+    //Store captures, increment array, set new flag, reset overflow
+    SET_BITS(AFlag, NEW_FLAG);
+    encoderAO = 0;
+    currASec = (char unsigned)((currASec + 1) % NUM_TRACKS);
+  }
 }
 
-long gemmeValAYo(void)
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 16, 2015
+
+calculateB does calculations on encoder A's values so that they need not
+  be done in the interrupt
+*************************************************************************/
+void calculateB(void)
 {
-  return encoderASecond[currASec-1];
+  if((BFlag & CALC_FLAG) == CALC_FLAG)
+  {  
+    if((encoderBFirstCapt < encoderBLastCapt) && encoderBO != 0)  //If extra overflow count, remove it
+    {
+      encoderBO--;
+    }
+  
+    //Calculate total time passed
+    encoderBSecond[currBSec] = (encoderBO*MAX_INT)+(encoderBLastCapt - encoderBFirstCapt);
+  
+    //Store captures, increment array, set new flag, reset overflow
+    SET_BITS(BFlag, NEW_FLAG);
+    encoderBO = 0;
+    currBSec = (char unsigned)((currBSec + 1) % NUM_TRACKS);
+  }
 }
+
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 16, 2015
+
+newAValue returns a true/false on whether or not there is a new value
+*************************************************************************/
+char unsigned newAValue(void)
+{
+  char unsigned returnVal = ((AFlag & NEW_FLAG)>>1);  //Isolate flag bit
+  CLR_BITS(AFlag, NEW_FLAG);
+  return(returnVal);
+}
+
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 16, 2015
+
+newBValue returns a true/false on whether or not there is a new value
+*************************************************************************/
+char unsigned newBValue(void)
+{
+  char unsigned returnVal = ((BFlag & NEW_FLAG)>>1);  //Isolate flag bit
+  CLR_BITS(BFlag, NEW_FLAG);
+  return(returnVal);
+}
+
+  //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+long unsigned gemmeValBYo(void)
+{ //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+  return encoderBSecond[currASec-1];
+} //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+  //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+long unsigned gemmeValAYo(void)
+{ //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+  return encoderASecond[currASec-1];
+} //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+  //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
 /*************************************************************************
 Author: Josiah Snarr
@@ -106,19 +186,12 @@ encoderAHandler handles interrupts for encoder A
 *************************************************************************/
 interrupt VectorNumber_Vtimch0 void encoderAHandler(void)
 {
-  encoderALastCapt = TIMER_A;   //Get time at interrupt
-
-  if(encoderAFirstCapt < encoderALastCapt)  //If extra overflow count, remove it
-  {
-    encoderAO--;
-  }
-  
-  //Calculate total time passed
-  encoderASecond[currASec] = (encoderAO*MAX_INT)+(encoderALastCapt - encoderAFirstCapt);
-  
-  //Store captures, increment array
+  //Get time at interrupt
   encoderAFirstCapt = encoderALastCapt;
-  currASec = (char unsigned)((currASec + 1) % NUM_TRACKS);
+  encoderALastCapt = TIMER_A;
+  
+  //Store captures, increment array, set new value flag, reset overflow
+  SET_BITS(AFlag, CALC_FLAG);
 }
 
 /*************************************************************************
@@ -129,19 +202,12 @@ encoderBHandler handles interrupts for encoder B
 *************************************************************************/
 interrupt VectorNumber_Vtimch1 void encoderBHandler(void)
 {
-  encoderBLastCapt = TIMER_B;   //Get time at interrupt
-  
-  if(encoderBFirstCapt < encoderBLastCapt)  //If extra overflow count, remove it
-  {
-    encoderBO--;
-  }
-  
-  //Calculate total time passed
-  encoderBSecond[currBSec] = (encoderBO*MAX_INT)+(encoderBLastCapt - encoderBFirstCapt);
-  
-  //Store captures, increment array
+  //Get time at interrupt
   encoderBFirstCapt = encoderBLastCapt;
-  currBSec = (char unsigned)((currBSec + 1) % NUM_TRACKS);
+  encoderBLastCapt = TIMER_B;
+
+  //Set newflag/new calculation
+  SET_BITS(BFlag, CALC_FLAG);
 }
 
 
@@ -153,7 +219,7 @@ overflowHandler handles timer channel overflows
 
 NOTE **POSSIBLE FUTURE IMPLEMENTATION, WORTH 1%**
 *************************************************************************/
-interrupt VectorNumber_Vtimpaovf void overflowHandler(void)
+interrupt VectorNumber_Vtimovf void overflowHandler(void)
 {
   encoderAO++;
   encoderBO++;

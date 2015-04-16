@@ -11,7 +11,7 @@ macros.h contains macros to support the HCS12 embedded system project
 #include <hidef.h>
 #include "derivative.h"
 
-//Maxes
+//Maxes & other common constants
 #define MAX_CHAR    0xFF
 #define MAX_INT     0xFFFF
 #define MAX_LONG    0xFFFFFFFF
