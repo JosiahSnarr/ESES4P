@@ -11,6 +11,11 @@ macros.h contains macros to support the HCS12 embedded system project
 #include <hidef.h>
 #include "derivative.h"
 
+//Maxes
+#define MAX_CHAR    0xFF
+#define MAX_INT     0xFFFF
+#define MAX_LONG    0xFFFFFFFF
+
 //Resgister
 #define A_REGISTER  (*(volatile unsigned char * const) 0x1234)
 #define TCTL_1_2    (*(volatile word * const)&TCTL1)

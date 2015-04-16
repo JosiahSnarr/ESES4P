@@ -32,7 +32,6 @@ SPI.h contains macros, constants, and prototypes for the SPI functions
 #define COM_LDB   2
 
 //Prototypes
-void DACUpdate(void);
 void DACWake(void);
 void DACShutdown(void);
 void DACStandby(void);
