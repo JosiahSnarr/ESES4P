@@ -26,6 +26,7 @@ int unsigned nbrPackets(void)
 //Get next packet
 char * nextPacket(void)
 {
+  numPacket--;
   return packBuff + packOff[0];
 }
 
