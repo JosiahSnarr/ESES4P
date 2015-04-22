@@ -26,6 +26,8 @@ int   volatile static unsigned encoderBFirstCapt;    //Encoder B first TCNT capt
 int   volatile static unsigned encoderBLastCapt;     //Encoder B last TCNT capture
 char  volatile static unsigned BFlag;               //Flag for encoder B status
 
+int   static unsigned fsf = 2^FEEDBACK_SCALE_POWER; //Feedback scale factor
+
 /*************************************************************************
 Author: Josiah Snarr
 Date: April 15, 2015
@@ -86,6 +88,60 @@ void encoderStop(void)
   //Set flags to 0
   AFlag = 0;
   BFlag = 0;
+}
+
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 16, 2015
+
+speedJa returns the speed of a motor
+*************************************************************************/
+int speedJa(char motorJa)
+{
+  int unsigned lastCapt;      //Most recent tclk capture taken
+  int unsigned firstCapt;     //First tclk capture taken
+  int unsigned tclkCount;     //Amount of tclk counts passed
+  int unsigned encPer;        //Encoder period (ns)
+  int unsigned encSpeed;      //Speed of the encoder shaft  (hz)
+  int unsigned encShaftSpeed; //Encoder shaft speed (hz)(x10)
+  int unsigned motShaftSpeed; //Motor shaft speed (hz)(x10)
+  int unsigned speed;         //Speed of the motor
+  
+  switch(motorJa)
+  {
+    case 'A': //If motor A, get A captures
+      DisableInterrupts;
+      lastCapt = encoderALastCapt;
+      firstCapt = encoderAFirstCapt;
+      EnableInterrupts;
+      break;
+    case 'B': //If motor B, get B captures
+      DisableInterrupts;
+      lastCapt = encoderBLastCapt;
+      firstCapt = encoderBFirstCapt;
+      EnableInterrupts;
+      break;
+    default:
+      //Nothing here ja
+      break;
+  }
+  
+  //Get amount of tclk counts and from that the encoder period, and then speed (hz)
+  tclkCount = firstCapt - lastCapt;
+  encPer = NS_PERIOD*tclkCount;
+  encSpeed = (int unsigned)(((long unsigned)(encPer*1000000))/NUM_ENCODER_VANES);   //*1000000 to get into seconds
+  
+  //Get the motor encoder shaft speed in hz (x10)
+  encShaftSpeed = (encSpeed*10)/GEAR_RAT_X_10;
+  
+  //Get the motor output shaft speed in hz and make up for the digit 4 in pi for more accuracy
+  motShaftSpeed = (encShaftSpeed)*(PI_10*CIRC_10);
+  motShaftSpeed += (2*motShaftSpeed)/5;
+  
+  //Reverse previous *10's, this is speed
+  speed = motShaftSpeed/10;
+  
+  return speed;
 }
 
 /*************************************************************************

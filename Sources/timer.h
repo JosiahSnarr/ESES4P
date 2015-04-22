@@ -25,6 +25,10 @@ timer.h contains macros, constants, and prototypes for the timer.c
 
 #define TIMER_SET_PRESCALER(prescale) CLR_BITS(TSCR2, TIMER_PRESCALER_MASK); \
   SET_BITS(TSCR2, prescale)
+  
+//For 64 prescaler
+#define TCLK_FREQ   125000    //TCLK frequency is 125000 hz
+#define NS_PERIOD   8         //Period for a nanosecond
 
 //Timer system control
 #define TIMER_ENABLE()              SET_BITS(TSCR1, TSCR1_TEN_MASK)
