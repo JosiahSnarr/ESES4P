@@ -28,19 +28,21 @@ DCencoder.h contains macros, constants, and prototypes for the DC motor
 
 #define NUM_TRACKS    20
 
-#define FEEDBACK_SCALE_POWER  24    //Feedback scale factor is 2^ this value
-#define NUM_ENCODER_VANES     27    //Number of vanes on the encoder
-#define GEAR_RAT_X_10         225   //Gear ratio x 10
-#define PI_10                 31    //Pi x 10
-#define CIRC_10               1665  //10x motor speed
+#define FEEDBACK_SCALE_FACTOR   16777216
+#define SENSOR_GAIN             4946
+
+//Gains for feedback control
+#define P_GAIN                  25
+#define I_GAIN                  25
+#define GAIN_DIVISOR            100
 
 //Prototypes
 extern void encoderInit(void);
 extern void encoderStart(void);
 extern void encoderStop(void);
-int speedJa(char motorJa);
-extern void calculateA(void);
-extern void calculateB(void);
+extern void setSpeed(char unsigned speedVal);
+extern void encoderVals(void);
+extern void stopFeed(void);
 extern char unsigned newAValue(void);
 extern char unsigned newBValue(void);
 extern long unsigned gemmeValBYo(void);

@@ -25,11 +25,13 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 
 #define PWM_PER         0x3F    //1.024ms period
 
-#define MAX_DUTY        0x00    //Max on duty corresponds to no off duty cycle  (motors max speed)
-#define MIN_DUTY        0xFF    //Min on duty corresponds to max off duty cycle (motors off)
+#define MAX_DUTY        0xFF    //Max on duty corresponds to no off duty cycle  (motors max speed)
+#define MIN_DUTY        0x00    //Min on duty corresponds to max off duty cycle (motors off)
 
 #define DIREC_FOR       0
 #define DIREC_BAC       1
+
+#define START_DUTY      0x10    //Starting duty cycle
 
 //Macros
 #define ENABLE_MOTOR(mask)    SET_BITS(PWME, mask)         //output pwm to motors
@@ -57,4 +59,5 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 extern void DCinit(void);
 extern void DCstart(void);
 extern void DCstop(void);
+extern void setDuty(char unsigned amount);
 extern void DCdirec(char mot, char direc);

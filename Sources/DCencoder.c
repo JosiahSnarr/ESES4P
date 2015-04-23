@@ -10,23 +10,25 @@ DCencoder.c contains the functions to control the DC motor speed and
 *************************************************************************/
 #include "derivative.h"
 #include "DCencoder.h"
+#include "DCmotor.h"
 #include "timer.h"
+#include "LCD_Macros.h"
 
-long  volatile static unsigned encoderASecond[NUM_TRACKS];      //Encoder A ticks over last second
-char  volatile static unsigned currASec;            //Current second of A in buffer
-int   volatile static unsigned encoderAO;            //Encoder A overflow
-int   volatile static unsigned encoderAFirstCapt;    //Encoder A first TCNT capture
-int   volatile static unsigned encoderALastCapt;     //Encoder B last TCNT capture
-char  volatile static unsigned AFlag;               //Flag for encoder A status
+//Globals
+char  volatile static unsigned currASec;              //Current second of A in buffer
+int   volatile static unsigned encoderAO;             //Encoder A overflow
+int   volatile static unsigned encoderAFirstCapt;     //Encoder A first TCNT capture
+char  volatile static unsigned AFlag;                 //Flag for encoder A status
 
-long  volatile static unsigned encoderBSecond[NUM_TRACKS];      //Encoder B ticks over last second
-char  volatile static unsigned currBSec;            //Current second of B in buffer
-int   volatile static unsigned encoderBO;            //Encoder B overflow
-int   volatile static unsigned encoderBFirstCapt;    //Encoder B first TCNT capture
-int   volatile static unsigned encoderBLastCapt;     //Encoder B last TCNT capture
-char  volatile static unsigned BFlag;               //Flag for encoder B status
+char  volatile static unsigned currBSec;              //Current second of B in buffer
+int   volatile static unsigned encoderBO;             //Encoder B overflow
+int   volatile static unsigned encoderBFirstCapt;     //Encoder B first TCNT capture
+char  volatile static unsigned BFlag;                 //Flag for encoder B status
 
-int   static unsigned fsf = 2^FEEDBACK_SCALE_POWER; //Feedback scale factor
+char  volatile static unsigned speedFlag;             //Flag for speed being set
+int   volatile static unsigned setSREP;               //SREP setpoint
+int   volatile static unsigned SREP = 0;
+char  volatile static unsigned motorDuty;             //Duty cycle for motor
 
 /*************************************************************************
 Author: Josiah Snarr
@@ -48,6 +50,7 @@ void encoderInit(void)
   
   AFlag = 0;
   BFlag = 0;
+  speedFlag = 0;
   currASec = 0;
   currBSec = 0;
 }
@@ -71,7 +74,7 @@ void encoderStart(void)
   SET_IC_ACTION(1, TIMER_IC_ACTION_RISING_EDGE);
   
   SET_BITS(TIE, TIE_C0I_MASK);//(TIE_C1I_MASK|TIE_C0I_MASK));     //Enable interrupts for both encoders
-  SET_BITS(TSCR2, TOI_MASK);                      //Enable overflow interrupt
+  //SET_BITS(TSCR2, TOI_MASK);                      //Enable overflow interrupt
 }
 
 /*************************************************************************
@@ -92,147 +95,70 @@ void encoderStop(void)
 
 /*************************************************************************
 Author: Josiah Snarr
-Date: April 16, 2015
+Date: April 23, 2015
 
-speedJa returns the speed of a motor
+setSpeed sets up the setpoint for the motor feedback
 *************************************************************************/
-int speedJa(char motorJa)
+void setSpeed(char unsigned speedVal)
 {
-  int unsigned lastCapt;      //Most recent tclk capture taken
-  int unsigned firstCapt;     //First tclk capture taken
-  int unsigned tclkCount;     //Amount of tclk counts passed
-  int unsigned encPer;        //Encoder period (ns)
-  int unsigned encSpeed;      //Speed of the encoder shaft  (hz)
-  int unsigned encShaftSpeed; //Encoder shaft speed (hz)(x10)
-  int unsigned motShaftSpeed; //Motor shaft speed (hz)(x10)
-  int unsigned speed;         //Speed of the motor
+  DisableInterrupts;
   
-  switch(motorJa)
-  {
-    case 'A': //If motor A, get A captures
-      DisableInterrupts;
-      lastCapt = encoderALastCapt;
-      firstCapt = encoderAFirstCapt;
-      EnableInterrupts;
-      break;
-    case 'B': //If motor B, get B captures
-      DisableInterrupts;
-      lastCapt = encoderBLastCapt;
-      firstCapt = encoderBFirstCapt;
-      EnableInterrupts;
-      break;
-    default:
-      //Nothing here ja
-      break;
-  }
+  //Multiply by feedback scale factor to find set point
+  setSREP = speedVal * SENSOR_GAIN;
+  speedFlag = 0;
   
-  //Get amount of tclk counts and from that the encoder period, and then speed (hz)
-  tclkCount = firstCapt - lastCapt;
-  encPer = NS_PERIOD*tclkCount;
-  encSpeed = (int unsigned)(((long unsigned)(encPer*1000000))/NUM_ENCODER_VANES);   //*1000000 to get into seconds
+  EnableInterrupts;
   
-  //Get the motor encoder shaft speed in hz (x10)
-  encShaftSpeed = (encSpeed*10)/GEAR_RAT_X_10;
+  DUTY_BOTH(MAX_DUTY);
+  msDelay(200);
   
-  //Get the motor output shaft speed in hz and make up for the digit 4 in pi for more accuracy
-  motShaftSpeed = (encShaftSpeed)*(PI_10*CIRC_10);
-  motShaftSpeed += (2*motShaftSpeed)/5;
+  DisableInterrupts;
+  //Set flag for speed being set
+  speedFlag = 1;
   
-  //Reverse previous *10's, this is speed
-  speed = motShaftSpeed/10;
+  EnableInterrupts;
   
-  return speed;
+  
+}
+
+void encoderVals(void)
+{
+  static int unsigned val2;
+  static char unsigned val1;
+  
+  DisableInterrupts;
+  val1 = motorDuty;
+  val2 = SREP;
+  EnableInterrupts;
+  LCDclear();
+  LCDprintf("\r\n%u %u", val1, val2);
 }
 
 /*************************************************************************
 Author: Josiah Snarr
-Date: April 16, 2015
+Date: April 23, 2015
 
-calculateA does calculations on encoder A's values so that they need not
-  be done in the interrupt
+stopFeed safely stops the closed loop feedback
 *************************************************************************/
-void calculateA(void)
+void stopFeed(void)
 {
-  if((AFlag & CALC_FLAG) == CALC_FLAG)
-  {  
-    if((encoderAFirstCapt < encoderALastCapt) && encoderAO != 0)  //If extra overflow count, remove it
-    {
-      encoderAO--;
-    }
-  
-    //Calculate total time passed
-    encoderASecond[currASec] = (encoderAO*MAX_INT)+(encoderALastCapt - encoderAFirstCapt);
-  
-    //Store captures, increment array, set new flag, reset overflow
-    SET_BITS(AFlag, NEW_FLAG);
-    encoderAO = 0;
-    currASec = (char unsigned)((currASec + 1) % NUM_TRACKS);
-  }
+  DisableInterrupts;
+  speedFlag = 0;
+  EnableInterrupts;
 }
 
 /*************************************************************************
 Author: Josiah Snarr
-Date: April 16, 2015
+Date: April 23, 2015
 
-calculateB does calculations on encoder A's values so that they need not
-  be done in the interrupt
+startFeed safely starts the closed loop feedback
 *************************************************************************/
-void calculateB(void)
+void startFeed(void)
 {
-  if((BFlag & CALC_FLAG) == CALC_FLAG)
-  {  
-    if((encoderBFirstCapt < encoderBLastCapt) && encoderBO != 0)  //If extra overflow count, remove it
-    {
-      encoderBO--;
-    }
-  
-    //Calculate total time passed
-    encoderBSecond[currBSec] = (encoderBO*MAX_INT)+(encoderBLastCapt - encoderBFirstCapt);
-  
-    //Store captures, increment array, set new flag, reset overflow
-    SET_BITS(BFlag, NEW_FLAG);
-    encoderBO = 0;
-    currBSec = (char unsigned)((currBSec + 1) % NUM_TRACKS);
-  }
+  DisableInterrupts;
+  speedFlag++;
+  EnableInterrupts;
 }
-
-/*************************************************************************
-Author: Josiah Snarr
-Date: April 16, 2015
-
-newAValue returns a true/false on whether or not there is a new value
-*************************************************************************/
-char unsigned newAValue(void)
-{
-  char unsigned returnVal = ((AFlag & NEW_FLAG)>>1);  //Isolate flag bit
-  CLR_BITS(AFlag, NEW_FLAG);
-  return(returnVal);
-}
-
-/*************************************************************************
-Author: Josiah Snarr
-Date: April 16, 2015
-
-newBValue returns a true/false on whether or not there is a new value
-*************************************************************************/
-char unsigned newBValue(void)
-{
-  char unsigned returnVal = ((BFlag & NEW_FLAG)>>1);  //Isolate flag bit
-  CLR_BITS(BFlag, NEW_FLAG);
-  return(returnVal);
-}
-
-  //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-long unsigned gemmeValBYo(void)
-{ //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-  return encoderBSecond[currASec-1];
-} //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-  //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-long unsigned gemmeValAYo(void)
-{ //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-  return encoderASecond[currASec-1];
-} //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-  //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
 /*************************************************************************
 Author: Josiah Snarr
@@ -242,12 +168,37 @@ encoderAHandler handles interrupts for encoder A
 *************************************************************************/
 interrupt VectorNumber_Vtimch0 void encoderAHandler(void)
 {
+  int static unsigned lastA = 0;                //Last value of timer channel for encoder A
+                   //SREP (scaled reciprocal of encoder period)
+  int static signed   speedError = 0;           //Speed error
+  int static signed   speedErrorIntegral = 0;   //Value for integration
+  int static signed   driveValue = 0;           //Drive value for new duty cycle
+  LCDputc('s');
   //Get time at interrupt
-  encoderAFirstCapt = encoderALastCapt;
-  encoderALastCapt = TIMER_A;
+  currASec = TIMER_A - lastA;
+  lastA = TIMER_A;
   
-  //Store captures, increment array, set new value flag, reset overflow
-  SET_BITS(AFlag, CALC_FLAG);
+  //Check if speed has been set
+  if(speedFlag != 0){
+    SREP = (int unsigned)(FEEDBACK_SCALE_FACTOR/lastA); //Get scaled reciprocal of encoder period
+    speedError = setSREP - SREP;
+    speedErrorIntegral += speedError;
+    driveValue = ((speedError * I_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR;
+    
+    //If outside of ranges, make it at the edge
+    if(driveValue > MAX_DUTY)
+    {
+      driveValue = MAX_DUTY;
+    }
+    else if(driveValue < MIN_DUTY)
+    {
+      driveValue = MIN_DUTY;
+    }
+    
+    motorDuty = (char unsigned)LOW(driveValue);
+    
+    DUTY_BOTH(motorDuty);
+  }
 }
 
 /*************************************************************************
@@ -258,12 +209,10 @@ encoderBHandler handles interrupts for encoder B
 *************************************************************************/
 interrupt VectorNumber_Vtimch1 void encoderBHandler(void)
 {
+  static int lastB = 0;
   //Get time at interrupt
-  encoderBFirstCapt = encoderBLastCapt;
-  encoderBLastCapt = TIMER_B;
-
-  //Set newflag/new calculation
-  SET_BITS(BFlag, CALC_FLAG);
+  currBSec = TIMER_B - lastB;
+  lastB = TIMER_B;
 }
 
 
