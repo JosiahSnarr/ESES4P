@@ -35,8 +35,8 @@ DCencoder.h contains macros, constants, and prototypes for the DC motor
 #define MAX_SIGNED_CHAR         127
 #define MIN_SIGNED_CHAR         -127
 
-#define STUPID_HIGH_SPEED       10197
-#define STUPID_LOW_SPEED        4944
+#define STUPID_HIGH_SPEED       12978
+#define STUPID_LOW_SPEED        4326
 
 //Prototypes
 extern char unsigned gimErr(void);    //!!!DEBUG DEBUG !!!

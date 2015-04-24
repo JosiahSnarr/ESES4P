@@ -8,7 +8,7 @@ Date: April 8, 2015
 accelerometer.c contains the functions to control the accelerometer
 *************************************************************************/
 #include "accelerometer.h"
-#include "derivative.h"
+#include "timer.h"
 
 /*************************************************************************
 Author: Josiah Snarr
@@ -40,12 +40,12 @@ Date: April 8, 2014
 
 getAccValue gets an accelerometer reading for the specified channel
 *************************************************************************/
-unsigned int getAccValue(unsigned char channel)
+unsigned int getAccValue(char channel)
 {
   unsigned int value = 0;
   
   setAccChnl(channel);
-
+  msDelay(100);
   //Set up ATDCTL5 for right justified and channel 0
   ATDCTL5 = ATDCTL5_SETUP;
   
@@ -55,7 +55,7 @@ unsigned int getAccValue(unsigned char channel)
   //Clear flag, read result (fast clear, reading clears SCF flag)
   value = ATDDR0;
 
-  return(value);  //Accdeleration value
+  return(value);  //Acceleration value
 }
 
 /*************************************************************************
@@ -65,23 +65,23 @@ Date: April 8, 2014
 
 setAccChnl sets the channel that the accelerometer is reading from
 *************************************************************************/
-void setAccChnl(unsigned char channel)
+void setAccChnl(char channel)
 {
   //Force cleare both bits (selects x)
   ACC_SEL_X;
   
   switch(channel)
   {
-    case 'x':
+    case 1:
       //Nothing to do, x selected (both bits clear)
       break;
       
-    case 'y':
+    case 2:
       //Set S0 for y select
       ACC_SEL_Y;
       break;
       
-    case 'z':
+    case 3:
       //Set S1 for z select
       ACC_SEL_Z;
       break;

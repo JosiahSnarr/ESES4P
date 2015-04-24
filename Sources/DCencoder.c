@@ -14,8 +14,8 @@ DCencoder.c contains the functions to control the DC motor speed and
 #include "timer.h"
 #include "LCD_Macros.h"
 
-int unsigned P_GAIN= 25;
-int unsigned I_GAIN= 25;
+int unsigned P_GAIN= 500;
+int unsigned I_GAIN= 50;
 int unsigned GAIN_DIVISOR= 100;
 
 //Globals
@@ -36,6 +36,10 @@ long  volatile static unsigned SREP = 0;
 char  volatile static unsigned motorDuty;             //Duty cycle for motor
 
 char  volatile static unsigned errJa;
+
+long static signed   speedError = 0;           //Speed error
+long static signed   speedErrorIntegral = 0;   //Value for integration
+long static signed   driveValue = 0;           //Drive value for new duty cycle
 
 //DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 char unsigned gimErr(void){
@@ -222,18 +226,15 @@ closedLoopHandler handles interrupts for controlling motor speed
 *************************************************************************/
 interrupt VectorNumber_Vtimch5 void closedLoopHandler(void)
 {
-  long static signed   speedError = 0;           //Speed error
-  long static signed   speedErrorIntegral = 0;   //Value for integration
-  long static signed   driveValue = 0;           //Drive value for new duty cycle
   
   TC5 += FIVE_MS;
   
   //Check if speed has been set
   if(speedFlag != 0){
-    if((setSREP < STUPID_HIGH_SPEED) && (setSREP > STUPID_LOW_SPEED)){  //If speed is not stupidly high (<33cm/s and >16cm/s)
+    //if((setSREP < STUPID_HIGH_SPEED) && (setSREP > STUPID_LOW_SPEED)){  //If speed is not stupidly high or low
       SREP = (long unsigned)(FEEDBACK_SCALE_FACTOR/currASec); //Get scaled reciprocal of encoder period
       speedError = setSREP - SREP;
-      errJa = (char unsigned)(speedError);///MAX_DUTY);
+      errJa = (char unsigned)(speedError/MAX_DUTY);
       if (((speedError < MAX_SIGNED_CHAR) && (speedError > 0)) || ((speedError > MIN_SIGNED_CHAR) && (speedError < 0))){  
         speedErrorIntegral += speedError;
       }
@@ -252,7 +253,7 @@ interrupt VectorNumber_Vtimch5 void closedLoopHandler(void)
       motorDuty = LOW(driveValue);
     
       DUTY_BOTH(motorDuty);
-    }
+    //}
   }
 }
 
