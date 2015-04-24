@@ -28,16 +28,22 @@ DCencoder.h contains macros, constants, and prototypes for the DC motor
 
 #define NUM_TRACKS    20
 
-#define FEEDBACK_SCALE_FACTOR   16777216
-#define SENSOR_GAIN             4946
+#define FEEDBACK_SCALE_FACTOR   1048576
+#define SENSOR_GAIN             309
 
-//Gains for feedback control
+#define FIVE_MS                 625         //625*8nsPerTclk = 5ms
+#define MAX_SIGNED_CHAR         127
+#define MIN_SIGNED_CHAR         -127
 
+#define STUPID_HIGH_SPEED       10197
+#define STUPID_LOW_SPEED        4944
 
 //Prototypes
-char unsigned gimErr(void);
+extern char unsigned gimErr(void);    //!!!DEBUG DEBUG !!!
 extern void encoderInit(void);
+extern void watchdogInit(void);
 extern void encoderStart(void);
+extern void watchdogStart(void);
 extern void encoderStop(void);
 extern void setSpeed(char unsigned speedVal);
 extern void encoderVals(void);

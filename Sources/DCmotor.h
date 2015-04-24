@@ -31,7 +31,7 @@ DCmotor.h contains macros, constants, and prototypes for the DC motor
 #define DIREC_FOR       0
 #define DIREC_BAC       1
 
-#define START_DUTY      0x10    //Starting duty cycle
+#define START_DUTY      20      //Starting duty cycle
 
 //Macros
 #define ENABLE_MOTOR(mask)    SET_BITS(PWME, mask)         //output pwm to motors

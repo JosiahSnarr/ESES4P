@@ -23,6 +23,7 @@ char  volatile static unsigned currASec;              //Current second of A in b
 int   volatile static unsigned encoderAO;             //Encoder A overflow
 int   volatile static unsigned encoderAFirstCapt;     //Encoder A first TCNT capture
 char  volatile static unsigned AFlag;                 //Flag for encoder A status
+int   volatile static unsigned lastA = 0;             //Last value of timer channel for encoder A
 
 char  volatile static unsigned currBSec;              //Current second of B in buffer
 int   volatile static unsigned encoderBO;             //Encoder B overflow
@@ -30,12 +31,13 @@ int   volatile static unsigned encoderBFirstCapt;     //Encoder B first TCNT cap
 char  volatile static unsigned BFlag;                 //Flag for encoder B status
 
 char  volatile static unsigned speedFlag;             //Flag for speed being set
-int   volatile static unsigned setSREP;               //SREP setpoint
-int   volatile static unsigned SREP = 0;
+long  volatile static unsigned setSREP;               //SREP setpoint
+long  volatile static unsigned SREP = 0;
 char  volatile static unsigned motorDuty;             //Duty cycle for motor
 
 char  volatile static unsigned errJa;
 
+//DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 char unsigned gimErr(void){
   char unsigned returnVal;
   DisableInterrupts;
@@ -67,6 +69,19 @@ void encoderInit(void)
   speedFlag = 0;
   currASec = 0;
   currBSec = 0;
+  watchdogInit();
+}
+
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 24, 2015
+
+watchdogInit initializes a watchdog for the closed loop control
+*************************************************************************/
+void watchdogInit(void)
+{
+  MAKE_CHNL_OC(TIOS_IOS5_MASK);               //Set up channel for OC
+  TIE &= (~((char unsigned)TIOS_IOS5_MASK));  //Disable interrupt on channel
 }
 
 /*************************************************************************
@@ -89,6 +104,19 @@ void encoderStart(void)
   
   SET_BITS(TIE, TIE_C0I_MASK);//(TIE_C1I_MASK|TIE_C0I_MASK));     //Enable interrupts for both encoders
   //SET_BITS(TSCR2, TOI_MASK);                      //Enable overflow interrupt
+  watchdogStart();
+}
+
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 24, 2015
+
+watchdogStart starts the watchdog for closed loop control
+*************************************************************************/
+void watchdogStart(void)
+{
+  TC5 = TCNT + FIVE_MS;
+  TIE |= TIOS_IOS5_MASK;    //Enable the interrupts
 }
 
 /*************************************************************************
@@ -109,6 +137,17 @@ void encoderStop(void)
 
 /*************************************************************************
 Author: Josiah Snarr
+Date: April 24, 2015
+
+watchdogStop stops the watchdog for closed loop control
+*************************************************************************/
+void watchdogStop(void)
+{
+  TIE &= (~((char unsigned)TIOS_IOS5_MASK));      //Disable the interrupts
+}
+
+/*************************************************************************
+Author: Josiah Snarr
 Date: April 23, 2015
 
 setSpeed sets up the setpoint for the motor feedback
@@ -123,8 +162,8 @@ void setSpeed(char unsigned speedVal)
   
   EnableInterrupts;
   
-  DUTY_BOTH(MAX_DUTY);
-  msDelay(200);
+  DUTY_BOTH(START_DUTY);
+  msDelay(500);
   
   DisableInterrupts;
   //Set flag for speed being set
@@ -135,9 +174,10 @@ void setSpeed(char unsigned speedVal)
   
 }
 
+//!!!DEBUG DEBUG DEBUG!!!
 void encoderVals(void)
 {
-  static int unsigned val2;
+  static long unsigned val2;
   static char unsigned val1;
   
   DisableInterrupts;
@@ -176,43 +216,57 @@ void startFeed(void)
 
 /*************************************************************************
 Author: Josiah Snarr
+Date: April 24, 2015
+
+closedLoopHandler handles interrupts for controlling motor speed
+*************************************************************************/
+interrupt VectorNumber_Vtimch5 void closedLoopHandler(void)
+{
+  long static signed   speedError = 0;           //Speed error
+  long static signed   speedErrorIntegral = 0;   //Value for integration
+  long static signed   driveValue = 0;           //Drive value for new duty cycle
+  
+  TC5 += FIVE_MS;
+  
+  //Check if speed has been set
+  if(speedFlag != 0){
+    if((setSREP < STUPID_HIGH_SPEED) && (setSREP > STUPID_LOW_SPEED)){  //If speed is not stupidly high (<33cm/s and >16cm/s)
+      SREP = (long unsigned)(FEEDBACK_SCALE_FACTOR/currASec); //Get scaled reciprocal of encoder period
+      speedError = setSREP - SREP;
+      errJa = (char unsigned)(speedError);///MAX_DUTY);
+      if (((speedError < MAX_SIGNED_CHAR) && (speedError > 0)) || ((speedError > MIN_SIGNED_CHAR) && (speedError < 0))){  
+        speedErrorIntegral += speedError;
+      }
+      driveValue = (long unsigned)(((speedError * P_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR);
+    
+      //If outside of ranges, make it at the edge
+      if(driveValue > MAX_DUTY)
+      {
+        driveValue = MAX_DUTY;
+      }
+      else if(driveValue < MIN_DUTY)
+      {
+        driveValue = MIN_DUTY;
+      }
+    
+      motorDuty = LOW(driveValue);
+    
+      DUTY_BOTH(motorDuty);
+    }
+  }
+}
+
+/*************************************************************************
+Author: Josiah Snarr
 Date: April 15, 2015
 
 encoderAHandler handles interrupts for encoder A
 *************************************************************************/
 interrupt VectorNumber_Vtimch0 void encoderAHandler(void)
-{
-  int static unsigned lastA = 0;                //Last value of timer channel for encoder A
-                   //SREP (scaled reciprocal of encoder period)
-  int static signed   speedError = 0;           //Speed error
-  int static signed   speedErrorIntegral = 0;   //Value for integration
-  int static signed   driveValue = 0;           //Drive value for new duty cycle
+{ 
   //Get time at interrupt
   currASec = TIMER_A - lastA;
   lastA = TIMER_A;
-  
-  //Check if speed has been set
-  if(speedFlag != 0){
-    SREP = (int unsigned)(FEEDBACK_SCALE_FACTOR/lastA); //Get scaled reciprocal of encoder period
-    speedError = setSREP - SREP;
-    errJa = speedError/MAX_DUTY;
-    speedErrorIntegral += speedError;
-    driveValue = ((speedError * P_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR;
-    
-    //If outside of ranges, make it at the edge
-    if(driveValue > MAX_DUTY)
-    {
-      driveValue = MAX_DUTY;
-    }
-    else if(driveValue < MIN_DUTY)
-    {
-      driveValue = MIN_DUTY;
-    }
-    
-    motorDuty = (char unsigned)LOW(driveValue);
-    
-    DUTY_BOTH(motorDuty);
-  }
 }
 
 /*************************************************************************
@@ -223,38 +277,10 @@ encoderBHandler handles interrupts for encoder B
 *************************************************************************/
 interrupt VectorNumber_Vtimch1 void encoderBHandler(void)
 {
-  int static unsigned lastA = 0;                //Last value of timer channel for encoder A
-                   //SREP (scaled reciprocal of encoder period)
-  int static signed   speedError = 0;           //Speed error
-  int static signed   speedErrorIntegral = 0;   //Value for integration
-  int static signed   driveValue = 0;           //Drive value for new duty cycle
   //Get time at interrupt
   currASec = TIMER_A - lastA;
   lastA = TIMER_A;
-  
-  //Check if speed has been set
-  if(speedFlag != 0){
-    SREP = (int unsigned)(FEEDBACK_SCALE_FACTOR/lastA); //Get scaled reciprocal of encoder period
-    speedError = setSREP - SREP;
-    speedErrorIntegral += speedError;
-    driveValue = ((speedError * P_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR;
-    
-    //If outside of ranges, make it at the edge
-    if(driveValue > MAX_DUTY)
-    {
-      driveValue = MAX_DUTY;
-    }
-    else if(driveValue < MIN_DUTY)
-    {
-      driveValue = MIN_DUTY;
-    }
-    
-    motorDuty = (char unsigned)LOW(driveValue);
-    
-    DUTY_BOTH(motorDuty);
-  }
 }
-
 
 /*************************************************************************
 Author: Josiah Snarr
