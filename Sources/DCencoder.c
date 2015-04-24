@@ -14,6 +14,10 @@ DCencoder.c contains the functions to control the DC motor speed and
 #include "timer.h"
 #include "LCD_Macros.h"
 
+int unsigned P_GAIN= 25;
+int unsigned I_GAIN= 25;
+int unsigned GAIN_DIVISOR= 100;
+
 //Globals
 char  volatile static unsigned currASec;              //Current second of A in buffer
 int   volatile static unsigned encoderAO;             //Encoder A overflow
@@ -29,6 +33,16 @@ char  volatile static unsigned speedFlag;             //Flag for speed being set
 int   volatile static unsigned setSREP;               //SREP setpoint
 int   volatile static unsigned SREP = 0;
 char  volatile static unsigned motorDuty;             //Duty cycle for motor
+
+char  volatile static unsigned errJa;
+
+char unsigned gimErr(void){
+  char unsigned returnVal;
+  DisableInterrupts;
+  returnVal = errJa;
+  EnableInterrupts;
+  return(returnVal);
+}
 
 /*************************************************************************
 Author: Josiah Snarr
@@ -173,7 +187,6 @@ interrupt VectorNumber_Vtimch0 void encoderAHandler(void)
   int static signed   speedError = 0;           //Speed error
   int static signed   speedErrorIntegral = 0;   //Value for integration
   int static signed   driveValue = 0;           //Drive value for new duty cycle
-  LCDputc('s');
   //Get time at interrupt
   currASec = TIMER_A - lastA;
   lastA = TIMER_A;
@@ -182,8 +195,9 @@ interrupt VectorNumber_Vtimch0 void encoderAHandler(void)
   if(speedFlag != 0){
     SREP = (int unsigned)(FEEDBACK_SCALE_FACTOR/lastA); //Get scaled reciprocal of encoder period
     speedError = setSREP - SREP;
+    errJa = speedError/MAX_DUTY;
     speedErrorIntegral += speedError;
-    driveValue = ((speedError * I_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR;
+    driveValue = ((speedError * P_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR;
     
     //If outside of ranges, make it at the edge
     if(driveValue > MAX_DUTY)
@@ -209,10 +223,36 @@ encoderBHandler handles interrupts for encoder B
 *************************************************************************/
 interrupt VectorNumber_Vtimch1 void encoderBHandler(void)
 {
-  static int lastB = 0;
+  int static unsigned lastA = 0;                //Last value of timer channel for encoder A
+                   //SREP (scaled reciprocal of encoder period)
+  int static signed   speedError = 0;           //Speed error
+  int static signed   speedErrorIntegral = 0;   //Value for integration
+  int static signed   driveValue = 0;           //Drive value for new duty cycle
   //Get time at interrupt
-  currBSec = TIMER_B - lastB;
-  lastB = TIMER_B;
+  currASec = TIMER_A - lastA;
+  lastA = TIMER_A;
+  
+  //Check if speed has been set
+  if(speedFlag != 0){
+    SREP = (int unsigned)(FEEDBACK_SCALE_FACTOR/lastA); //Get scaled reciprocal of encoder period
+    speedError = setSREP - SREP;
+    speedErrorIntegral += speedError;
+    driveValue = ((speedError * P_GAIN) + (speedErrorIntegral * I_GAIN)) / GAIN_DIVISOR;
+    
+    //If outside of ranges, make it at the edge
+    if(driveValue > MAX_DUTY)
+    {
+      driveValue = MAX_DUTY;
+    }
+    else if(driveValue < MIN_DUTY)
+    {
+      driveValue = MIN_DUTY;
+    }
+    
+    motorDuty = (char unsigned)LOW(driveValue);
+    
+    DUTY_BOTH(motorDuty);
+  }
 }
 
 

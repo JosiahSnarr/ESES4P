@@ -32,11 +32,10 @@ DCencoder.h contains macros, constants, and prototypes for the DC motor
 #define SENSOR_GAIN             4946
 
 //Gains for feedback control
-#define P_GAIN                  25
-#define I_GAIN                  25
-#define GAIN_DIVISOR            100
+
 
 //Prototypes
+char unsigned gimErr(void);
 extern void encoderInit(void);
 extern void encoderStart(void);
 extern void encoderStop(void);
