@@ -10,6 +10,10 @@ DCmotor.c contains the functions to control the DC motor
 #include "derivative.h"
 #include "DCmotor.h"
 
+//Globals
+char  volatile static unsigned aDuty;
+char  volatile static unsigned bDuty;
+
 /*************************************************************************
 Author: Josiah Snarr
 Date: April 13, 2015
@@ -19,7 +23,7 @@ DCinit initializes the pwm module which the DC motor uses
 void DCinit(void)
 {
   //Set up PWM
-  CLR_BITS(PWMPOL, MOTORS_MASK);      //Duty cycle corresponds to low time
+  SET_BITS(PWMPOL, MOTORS_MASK);      //Duty cycle corresponds to high time
   CLR_BITS(PWMCLK, MOTORS_MASK);      //Select clock A for both motors
   PWMPRCLK = CLOCK_SCALE;             //No prescale
   CLR_BITS(PWMCAE, MOTORS_MASK);      //Left align the pulses
@@ -28,6 +32,10 @@ void DCinit(void)
   DUTY_A(MIN_DUTY);                   //Motor A is off
   DUTY_B(MIN_DUTY);                   //Motor B is off
   DISABLE_BOTH;                       //Ensure motors are disabled
+  
+  //Ensure motors are off
+  aDuty = MIN_DUTY;
+  bDuty = MIN_DUTY;
   
   //Set up port B for motor direction selection
   SET_BITS(DC_DDR, MOTOR_SEL_MASK);   //Set port B pins 0-3 as output
@@ -44,7 +52,11 @@ DCstart starts the DC motors
 void DCstart(void)
 {
   ENABLE_BOTH;
-  DUTY_BOTH(0x10);
+  DisableInterrupts;
+  aDuty = START_DUTY;
+  bDuty = START_DUTY;
+  EnableInterrupts;
+  DUTY_BOTH(START_DUTY);
 }
 
 /*************************************************************************
@@ -56,6 +68,17 @@ DCstop stops the DC motors
 void DCstop(void)
 {
   DISABLE_BOTH;
+}
+
+/*************************************************************************
+Author: Josiah Snarr
+Date: April 23, 2015
+
+setDuty sets the duty cycle of the motors
+*************************************************************************/
+void setDuty(char unsigned amount)
+{
+  DUTY_BOTH(amount);
 }
 
 /*************************************************************************

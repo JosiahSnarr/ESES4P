@@ -43,9 +43,9 @@ stepper.h contains macros, constants, and prototypes for the stepper motor
 #define SWI_DIR(x)      ((x)*=-1)   //Switch direction (toggle)
 
 //Prototypes
-void stepperInit(void);
-void stepperStep(void);
-void stepperHome(void);
-unsigned int stepperPosition(void);
-unsigned int stepperBusy(void);
-void stepperAngle(unsigned char angle);
+extern void stepperInit(void);
+extern void stepperStep(void);
+extern void stepperHome(void);
+extern unsigned int stepperPosition(void);
+extern unsigned int stepperBusy(void);
+extern void stepperAngle(unsigned char angle);

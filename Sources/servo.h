@@ -18,8 +18,5 @@ servo.h contains macros, constants, and prototypes for the servo control
 #define INIT_TIME         90        // initially 1500us pulse
 #define OFFSET            60        // offset to make pulse from angle input
 
-void servo_init(void);
-
-void servo_angle(unsigned int angle);
-
-interrupt VectorNumber_Vtimch2 void servo_pulse(void);
+extern void servo_init(void);
+extern void servo_angle(unsigned int angle);

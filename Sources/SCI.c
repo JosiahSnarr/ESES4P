@@ -84,9 +84,9 @@ void putsSCI(unsigned char *ptr)
 Author: Josiah Snarr
 Date: April 10, 2015
 
-the sciReceive interrupt handles incommign data and places it into the
+the sciReceive interrupt handles incomming data and places it into the
   bound buffer
-*************************************************************************/
+*************************************************************************
 interrupt VectorNumber_Vsci void sciReceive(void)
 {
   sciBuff[inBuff] = SCIDRL;
@@ -97,4 +97,4 @@ interrupt VectorNumber_Vsci void sciReceive(void)
     outBuff = (char)((outBuff+1) % BOUND_BUFF_SIZE);
   }
   CLR_BITS(SCISR1, SCISR1_RDRF_MASK);
-}
+}*/

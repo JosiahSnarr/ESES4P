@@ -7,7 +7,6 @@ Date: March 30, 2015
 
 servo.c contains the functions and interrupts to control the servo motor
 *************************************************************************/
-
 #include "servo.h"
 #include "timer.h"
 

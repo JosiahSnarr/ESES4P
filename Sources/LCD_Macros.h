@@ -76,11 +76,11 @@ LCD_Macros.h contains the macros, constants and prototypes to support the
 #define LCD_BUS(value)	FORCE_BITS(LCD_PORT, LCD_BUS_MASK, (value))
 
 //Prototypes
-void LCDdata(unsigned char thisByte);
-void LCDcmd(unsigned char command);
-void LCDclear(void);
-void LCDinit(void);
-void LCDputc(char c);
-void LCDputs(char *ptr);
-void LCDprintf(char * format, ...);
-void LCDcgramInit(char * buffer, char numRow, char location);
+extern void LCDdata(unsigned char thisByte);
+extern void LCDcmd(unsigned char command);
+extern void LCDclear(void);
+extern void LCDinit(void);
+extern void LCDputc(char c);
+extern void LCDputs(char *ptr);
+extern void LCDprintf(char * format, ...);
+extern void LCDcgramInit(char * buffer, char numRow, char location);

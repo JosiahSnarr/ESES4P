@@ -28,6 +28,6 @@ servo.h contains macros, constants, and prototypes for the accelerometer
 #define ACC_SEL_Z           SET_BITS(ACC_FUNC_PORT, ACC_FUNC_PORT_S1);
 
 //Prototypes
-void accInit(void);
-unsigned int getAccValue(unsigned char channel);
-void setAccChnl(unsigned char channel);
+extern void accInit(void);
+extern unsigned int getAccValue(char channel);
+extern void setAccChnl(char channel);
